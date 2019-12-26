@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Vue Practice</title>
+  <style>
+    .static {
+      color: red;
+    }
+
+    .active {
+      font-weight: bold;
+    }
+
+  </style>
+</head>
+<body>
+  <div id="app">
+    <H3>{{ message }}</H3>
+
+    <p v-if='seen'>Now you see me: {{ now }}</p>
+    <p>This is reverse MSG: {{ reversedMsg }}</p>
+
+    <ol>
+      <li v-for="todo in todos">
+        {{todo.text}}
+      </li>
+    </ol>
+
+    <ol>
+      <todo-item 
+        v-for="item in groceryList"
+        v-bind:todo="item"
+        v-key:key="item.id">
+      </todo-item>
+    </ol>
+
+    <input type="text" v-model="message">
+    <button v-on:click="reverseMsg">Reverse</button>
+
+  </div>
+
+  <div id="watch-example">
+    <h3>A Watch demo</h3>
+    <p>Ask me a question: 
+      <input v-model="question">
+    </p>
+    <p><strong>Answer: </strong>{{ answer }}</p>
+  </div>
+
+  <div id="vue-style">
+    <h3>Vue Style Demo</h3>
+    <p>This is a Vue Style demo</p>
+    <ul v-bind:class="classObj"
+        v-on:click="clickFun">
+      <li>HTML</li>
+      <li>Javascript</li>
+      <li>CSS</li>
+    </ul>
+
+    <p v-bind:style="inlineStyleObj"
+      v-on:click='beBold'>
+      This is a inline style demo</p>
+
+    <p v-if='ifAddtoDom'>This p dom will remove if toggle</p>
+    <p v-show='addtoDom'>This will remaim in dom</p>
+    <input type="button" 
+          value="Toggle if/show"
+          v-on:click="toggleVal">
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios@0.12.0/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lodash@4.13.1/lodash.min.js"></script>
+
+  <script>
+
+    Vue.component('todo-item', {
+      props:['todo'],
+      template:`<li>{{todo.text}}</li>`
+    });
+
+    var app = new Vue({
+      el:'#app',
+      
+      data: {
+        message: 'Halo Vue.js',
+        seen: true,
+        todos: [
+          {text: "learn Javascript"},
+          {text: "learn Vue"},
+          {text: "learn Engineering"},
+        ],
+        groceryList: [
+          { id: 0, text: '蔬菜' },
+          { id: 1, text: '奶酪' },
+          { id: 2, text: '随便其它什么人吃的东西' }
+        ]
+      },
+
+      computed: {
+        reversedMsg: function() {
+          return this.message.split("").reverse().join("");
+        },
+        now: function() {
+          return Date.now();
+        }
+      },
+
+      methods: {
+        reverseMsg(){
+          this.message = this.message.split("").reverse().join("");
+        }
+      }
+    });
+
+    var watchExampleVm = new Vue({
+      el: '#watch-example',
+
+      data: {
+        question: '',
+        answer: 'There is no answer until you enter something'
+      },
+
+      watch: {
+        question: function(newQuest, oldQuest) {
+          this.answer = 'Waiting for you stop typing';
+          this.debouncedGetAnswer();
+        }
+      },
+
+      created: function() {
+        this.debouncedGetAnswer = _.debounce(this.getAnswer, 500)
+      },
+
+      methods: {
+        getAnswer: function() {
+          if(this.question.indexOf('?')==0) {
+            this.answer = 'Quesction usually contains a mark like "?" ';
+            return;
+          }
+
+          this.answer = "Thinking";
+          var vm = this;
+
+          axios.get("https://yesno.wtf/api")
+            .then(function(response) {
+              vm.answer = _.capitalize(response.data.answer);
+            }).catch(function(error) {
+              vm.answer = 'Error! could not reach the API: '+ error;
+            });
+        }
+      }
+    });
+
+    var vueStyleApp = new Vue({
+      el:"#vue-style",
+
+      data: {
+        classObj: {
+          active: false,
+          static:true
+        },
+
+        inlineStyleObj: {
+          'color': 'red',
+          'fontSize': '20px',
+          'font-weight': 'normal'
+        },
+
+        ifAddtoDom:true,
+        addtoDom: true
+      },
+
+      methods: {
+        clickFun: function() {
+          this.classObj.active = true;
+
+          vm = this;
+          setTimeout(function() {
+            vm.classObj.active = false;
+          }, 1000);
+        },
+
+        beBold: function() {
+          this.inlineStyleObj['font-weight'] = 'bold';
+          vm = this;
+          setTimeout(function() {
+            vm.inlineStyleObj['font-weight'] = 'normal';
+          },1000)
+        },
+
+        toggleVal: function() {
+          
+          this.ifAddtoDom = !this.ifAddtoDom;
+          this.addtoDom = !this.addtoDom;
+        }
+      }
+    })
+  </script>
+  <script src="index.js"></script>
+</body>
+</html>
